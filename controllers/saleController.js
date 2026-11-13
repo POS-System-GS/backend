@@ -239,3 +239,39 @@ exports.getReceipt = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * Get All Sales (Sales History)
+ * GET /api/sales
+ */
+exports.getAllSales = async (req, res, next) => {
+  try {
+    const pool = await poolPromise;
+    const query = `
+      SELECT 
+        s.ID AS SaleId, 
+        s.SaleDate, 
+        s.TotalAmount, 
+        s.TaxAmount, 
+        s.DiscountAmount, 
+        s.FinalAmount, 
+        s.PaymentMethod,
+        u.Username AS CashierName,
+        c.Name AS CustomerName
+      FROM dbo.sales s
+      LEFT JOIN dbo.users u ON s.UserId = u.ID
+      LEFT JOIN dbo.customers c ON s.CustomerId = c.ID
+      ORDER BY s.SaleDate DESC
+    `;
+    const result = await pool.request().query(query);
+
+    res.status(200).json({
+      success: true,
+      count: result.recordset.length,
+      data: result.recordset
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
